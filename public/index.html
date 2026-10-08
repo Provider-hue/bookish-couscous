@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>rndf &middot; AI image detection</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header>
+    <h1>rndf <span>&middot; sahu65 detector</span></h1>
+    <div id="status" class="badge badge-unknown">checking&hellip;</div>
+  </header>
+
+  <section class="panel">
+    <h2>Backend</h2>
+    <div class="row">
+      <label>URL
+        <input id="backend-url" type="url" placeholder="https://rndf-api.onrender.com"
+               autocomplete="off" spellcheck="false" />
+      </label>
+      <label>API key
+        <input id="api-key" type="password" placeholder="(empty = open)" autocomplete="off" />
+      </label>
+      <button id="save" type="button">Save &amp; test</button>
+    </div>
+    <p class="hint">
+      Defaults come from this deployment's environment via <code>/api/config</code>
+      (<code>BACKEND_URL</code>, <code>DEMO_API_KEY</code>); anything typed here
+      overrides them and is kept in this browser only.
+    </p>
+  </section>
+
+  <main>
+    <form id="detect-form" class="panel">
+      <input id="file" type="file" accept="image/jpeg,image/png,image/webp" required />
+      <button type="submit" id="go">Detect</button>
+    </form>
+
+    <p id="error" class="error hidden"></p>
+
+    <section id="result" class="panel hidden">
+      <div class="verdict-row">
+        <span id="verdict" class="verdict">&mdash;</span>
+        <span id="latency" class="muted"></span>
+      </div>
+      <div class="prob">
+        <div class="prob-track"><div id="prob-fill"></div></div>
+        <span id="prob-value"></span>
+      </div>
+      <dl class="facts">
+        <div><dt>confidence</dt><dd id="confidence">&mdash;</dd></div>
+        <div><dt>classifier</dt><dd id="classifier">&mdash;</dd></div>
+        <div><dt>calibrated</dt><dd id="calibrated">&mdash;</dd></div>
+        <div><dt>warnings</dt><dd id="warnings">&mdash;</dd></div>
+      </dl>
+    </section>
+  </main>
+
+  <footer>
+    Output is an <strong>uncalibrated model score, not proof</strong> &mdash; see
+    <code>MODEL_CARD.md</code>. Do not use it for document or ID decisions
+    (measured AUC on documents: 0.375, worse than chance).
+  </footer>
+
+  <script src="./script.js"></script>
+</body>
+</html>

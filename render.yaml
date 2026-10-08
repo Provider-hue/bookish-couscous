@@ -1,0 +1,31 @@
+# Render blueprint for the rndf backend (single file: server.py).
+#
+# Render dashboard -> New -> Blueprint -> pick this repo and set the YAML path to
+# `rndf/render.yaml`. sahu65 is installed from PyPI (already published), so the
+# build needs nothing from the rest of the repo.
+services:
+  - type: web
+    name: rndf-api
+    runtime: python
+    plan: free # ~512 MB RAM vs ~480 MB steady-state for the model; use `starter` if you OOM
+    rootDir: rndf
+    buildCommand: pip install sahu65==1.0.12
+    startCommand: python server.py
+    healthCheckPath: /healthz # liveness only; gate clients on GET /readyz instead
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.6"
+      - key: HOST
+        value: 0.0.0.0
+      # Render injects $PORT itself; server.py binds to it automatically.
+      - key: LOG_LEVEL
+        value: info
+      - key: MAX_UPLOAD_MB
+        value: "10"
+      # Tighten to https://<your-app>.vercel.app once the frontend domain is known.
+      - key: ALLOWED_ORIGINS
+        value: "*"
+      # Auto-generated gate for POST /detect. Copy this value into Vercel's
+      # DEMO_API_KEY env var so public/script.js can present it.
+      - key: API_KEY
+        generateValue: true
