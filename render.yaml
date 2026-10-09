@@ -1,14 +1,17 @@
 # Render blueprint for the rndf backend (single file: server.py).
 #
 # Render dashboard -> New -> Blueprint -> pick this repo and set the YAML path to
-# `rndf/render.yaml`. sahu65 is installed from PyPI (already published), so the
+# `render.yaml`. sahu65 is installed from PyPI (already published), so the
 # build needs nothing from the rest of the repo.
+#
+# No `rootDir` is set on purpose: server.py, public/ and api/ all live at the
+# repository root, and Vercel's vercel.json resolves `public` relative to that
+# same root. Pointing `rootDir` at a subdirectory would break both deploys.
 services:
   - type: web
     name: rndf-api
     runtime: python
     plan: free # ~512 MB RAM vs ~480 MB steady-state for the model; use `starter` if you OOM
-    rootDir: rndf
     buildCommand: pip install sahu65==1.1.0
     startCommand: python server.py
     healthCheckPath: /healthz # liveness only; gate clients on GET /readyz instead
