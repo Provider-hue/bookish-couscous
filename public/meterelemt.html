@@ -3,16 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RGB Detection Meter (L to R)</title>
+    <title>RGB Detection Meter</title>
     <style>
-        /* Base page styling */
+        /* Base page styling. In embed mode the page drops its own background so the
+           meter inherits the host's, and the demo controls are removed. */
         body {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            background-color: #1a1a1a; 
+            background-color: #1a1a1a;
             margin: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: white;
@@ -46,12 +47,12 @@
             stroke-width: 40;
             stroke-linecap: butt;
             /* The dasharray defines the total length of the line */
-            stroke-dasharray: 251.3; 
+            stroke-dasharray: 251.3;
             /* The dashoffset determines how much is hidden (251.3 = 0%, 0 = 100%) */
             stroke-dashoffset: 251.3;
             /* Smooth transition when the score changes */
             transition: stroke-dashoffset 0.3s ease, stroke 0.3s ease;
-            
+
             /* Add a subtle glow effect */
             filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.2));
         }
@@ -72,6 +73,16 @@
             text-transform: uppercase;
             letter-spacing: 2px;
             margin-top: 5px;
+        }
+
+        /* Range caption: only rendered in embed mode, where the host sets it. */
+        .range-text {
+            display: none;
+            font-size: 0.7rem;
+            color: #6b7280;
+            text-align: center;
+            margin-top: 6px;
+            line-height: 1.45;
         }
 
         /* Demo Controls */
@@ -100,16 +111,34 @@
             cursor: pointer;
             font-weight: bold;
         }
-        
+
         button:hover {
             background: #555;
         }
+
+        /* --- Embedded mode (?embed=1) ---------------------------------------
+           Served in an iframe by index.html. Transparent background so the host
+           panel shows through, controls removed, slightly tighter type so the
+           whole element fits a fixed-height frame. */
+        body.embed {
+            background: transparent;
+            min-height: 0;
+            height: 100%;
+            justify-content: flex-start;
+            padding: 4px 0 0;
+        }
+
+        body.embed .meter-wrapper { width: 100%; max-width: 260px; }
+        body.embed .score-display { font-size: 2.4rem; margin-top: 10px; }
+        body.embed .label-text { font-size: 0.7rem; letter-spacing: 1.6px; }
+        body.embed .range-text { display: block; }
+        body.embed .controls { display: none; }
     </style>
 </head>
 <body>
 
     <div class="meter-wrapper">
-        <!-- 
+        <!--
             SVG coordinate system: 0 0 to 200 120.
             The arc is a 180-degree semi-circle.
             Radius (r) = 80.
@@ -119,7 +148,7 @@
         <svg viewBox="0 0 200 120">
             <!-- Empty Track -->
             <path class="arc-track" d="M 20 100 A 80 80 0 0 1 180 100" />
-            
+
             <!-- Filling Track (Now starts at LEFT 20 100, sweeps to RIGHT 180 100) -->
             <path id="arcFill" class="arc-fill" d="M 20 100 A 80 80 0 0 1 180 100" />
         </svg>
@@ -127,9 +156,10 @@
         <!-- Score Below the arc -->
         <div id="scoreText" class="score-display">0</div>
         <div class="label-text">Detection Level</div>
+        <div id="rangeText" class="range-text"></div>
     </div>
 
-    <!-- Controls to demonstrate the UI logic -->
+    <!-- Controls to demonstrate the UI logic (hidden in embed mode) -->
     <div class="controls">
         <label for="scoreSlider">Manual Control: </label><br>
         <input type="range" id="scoreSlider" min="0" max="100" value="0">
@@ -143,9 +173,14 @@
         const scoreText = document.getElementById('scoreText');
         const scoreSlider = document.getElementById('scoreSlider');
         const autoBtn = document.getElementById('autoBtn');
+        const rangeText = document.getElementById('rangeText');
 
         // The total length of the arc path
         const MAX_DASH = 251.3;
+
+        // Embedded mode is opt-in so this file stays a working standalone page.
+        const EMBED = new URLSearchParams(location.search).get('embed') === '1';
+        if (EMBED) document.body.classList.add('embed');
 
         /**
          * Interpolates between two RGB colors based on a percentage (0 to 1)
@@ -161,11 +196,13 @@
          * Updates the UI based on a score from 0 to 100
          */
         function updateMeter(score) {
+            const value = Math.max(0, Math.min(100, Number(score) || 0));
+
             // 1. Update the number text
-            scoreText.innerText = score;
+            scoreText.innerText = value;
 
             // 2. Calculate the dash offset (0 = empty, 251.3 = full)
-            const offset = MAX_DASH - (MAX_DASH * (score / 100));
+            const offset = MAX_DASH - (MAX_DASH * (value / 100));
             arcFill.style.strokeDashoffset = offset;
 
             // 3. Calculate RGB Color Gradient
@@ -173,60 +210,92 @@
             // 50% = Yellow/Orange [241, 196, 15]
             // 100% = Red [231, 76, 60]
             let currentColor;
-            if (score <= 50) {
+            if (value <= 50) {
                 // Interpolate between Green and Yellow
-                currentColor = lerpColor([46, 204, 113], [241, 196, 15], score / 50);
+                currentColor = lerpColor([46, 204, 113], [241, 196, 15], value / 50);
             } else {
                 // Interpolate between Yellow and Red
-                currentColor = lerpColor([241, 196, 15], [231, 76, 60], (score - 50) / 50);
+                currentColor = lerpColor([241, 196, 15], [231, 76, 60], (value - 50) / 50);
             }
 
             // Apply the calculated color to the SVG stroke and the Score text
             arcFill.style.stroke = currentColor;
             scoreText.style.color = currentColor;
-            scoreText.style.textShadow = `0 0 15px ${currentColor}66`; 
+            scoreText.style.textShadow = `0 0 15px ${currentColor}66`;
         }
 
         // --- Event Listeners for the Demo ---
+        // The slider only exists outside embed mode, where the controls are visible.
 
-        // 1. Slider Control
-        scoreSlider.addEventListener('input', (e) => {
-            updateMeter(parseInt(e.target.value));
-        });
+        if (!EMBED) {
+            // 1. Slider Control
+            scoreSlider.addEventListener('input', (e) => {
+                updateMeter(parseInt(e.target.value));
+            });
 
-        // 2. Auto-Scan Animation
-        let scanInterval = null;
-        let isScanning = false;
+            // 2. Auto-Scan Animation
+            let scanInterval = null;
+            let isScanning = false;
 
-        autoBtn.addEventListener('click', () => {
-            if (isScanning) {
-                clearInterval(scanInterval);
-                autoBtn.innerText = "Run Auto-Scan";
-                isScanning = false;
-                return;
-            }
-
-            isScanning = true;
-            autoBtn.innerText = "Stop Scan";
-            let currentScore = 0;
-            let direction = 1; // 1 for up, -1 for down
-
-            scanInterval = setInterval(() => {
-                currentScore += direction * 2; 
-
-                if (currentScore >= 100) {
-                    currentScore = 100;
-                    direction = -1;
-                } else if (currentScore <= 0) {
-                    currentScore = 0;
-                    direction = 1;
+            autoBtn.addEventListener('click', () => {
+                if (isScanning) {
+                    clearInterval(scanInterval);
+                    autoBtn.innerText = "Run Auto-Scan";
+                    isScanning = false;
+                    return;
                 }
 
-                scoreSlider.value = currentScore;
-                updateMeter(currentScore);
+                isScanning = true;
+                autoBtn.innerText = "Stop Scan";
+                let currentScore = 0;
+                let direction = 1; // 1 for up, -1 for down
 
-            }, 30); 
-        });
+                scanInterval = setInterval(() => {
+                    currentScore += direction * 2;
+
+                    if (currentScore >= 100) {
+                        currentScore = 100;
+                        direction = -1;
+                    } else if (currentScore <= 0) {
+                        currentScore = 0;
+                        direction = 1;
+                    }
+
+                    scoreSlider.value = currentScore;
+                    updateMeter(currentScore);
+
+                }, 30);
+            });
+        } else {
+            // --- Host API ------------------------------------------------------
+            // index.html drives the meter by reaching into this same-origin frame.
+            // postMessage is also accepted so the meter still works if the two
+            // documents ever end up on different origins.
+            window.rndfMeter = {
+                /** score: 0-100 detection level. */
+                setScore(score) {
+                    updateMeter(score);
+                },
+                /** Sets the small caption under the arc, e.g. the score's meaning. */
+                setCaption(text) {
+                    rangeText.textContent = text || '';
+                },
+            };
+
+            window.addEventListener('message', (event) => {
+                const msg = event.data;
+                if (!msg || typeof msg !== 'object') return;
+                if (msg.type === 'rndf:meter-score') updateMeter(msg.score);
+                if (msg.type === 'rndf:meter-caption') {
+                    rangeText.textContent = msg.text || '';
+                }
+            });
+
+            // Tell the host we are ready to receive a score.
+            if (window.parent !== window) {
+                window.parent.postMessage({ type: 'rndf:meter-ready' }, '*');
+            }
+        }
 
         // Initialize at 0
         updateMeter(0);

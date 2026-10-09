@@ -9,7 +9,7 @@ services:
     runtime: python
     plan: free # ~512 MB RAM vs ~480 MB steady-state for the model; use `starter` if you OOM
     rootDir: rndf
-    buildCommand: pip install sahu65==1.0.12
+    buildCommand: pip install sahu65==1.1.0
     startCommand: python server.py
     healthCheckPath: /healthz # liveness only; gate clients on GET /readyz instead
     envVars:
@@ -29,3 +29,17 @@ services:
       # DEMO_API_KEY env var so public/script.js can present it.
       - key: API_KEY
         generateValue: true
+      # --- Groq narrator (server.py) ------------------------------------------
+      # Leave GROQ_API_KEY unset and scans still return: the explanation falls back
+      # to a factual template and `intent` comes back null.
+      - key: GROQ_API_KEY
+        sync: false
+      # Swap models without a code change, e.g. llama-3.1-8b-instant for a cheaper
+      # narration pass. See https://console.groq.com/docs/models for current ids.
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
+      # Narrator instructions. Set this as a multi-line value in the Render
+      # dashboard (Environment -> your service -> Add). Left unset, server.py uses
+      # its built-in default, which you can also override locally in .env.
+      - key: SYSTEM_PROMPT
+        sync: false

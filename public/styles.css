@@ -101,11 +101,37 @@ code { background: #0c111b; border-radius: 4px; padding: 0 0.3em; }
 }
 #detect-form input[type="file"] { flex: 1 1 260px; border: 1px dashed var(--line); }
 
+/* Result panel: meter on the left, every detail on the right. */
+.scan-layout {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.scan-meter iframe {
+  display: block;
+  width: 300px;
+  height: 300px;
+  border: 0;
+  background: transparent;
+}
+
+.scan-details { min-width: 0; }
+
+/* Below the meter width the two columns would squeeze the details too far, so the
+   meter moves above them instead of forcing a horizontal scrollbar. */
+@media (max-width: 720px) {
+  .scan-layout { grid-template-columns: minmax(0, 1fr); }
+  .scan-meter iframe { margin: 0 auto; }
+}
+
 .verdict-row {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   gap: 1rem;
+  margin-bottom: 0.9rem;
 }
 
 .verdict {
@@ -117,34 +143,42 @@ code { background: #0c111b; border-radius: 4px; padding: 0 0.3em; }
 .verdict-ai          { background: rgba(255, 92, 122, 0.15); color: var(--ai); }
 .verdict-real        { background: rgba(61, 220, 151, 0.15); color: var(--real); }
 .verdict-inconclusive{ background: rgba(255, 200, 87, 0.15); color: var(--maybe); }
+.verdict-verified    { background: rgba(255, 92, 122, 0.3); color: var(--ai); }
 
 .muted { color: var(--muted); font-size: 0.85rem; }
-
-.prob { display: flex; align-items: center; gap: 0.75rem; margin: 0.9rem 0; }
-.prob-track {
-  background: #0c111b;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  flex: 1;
-  height: 14px;
-  overflow: hidden;
-}
-#prob-fill {
-  background: linear-gradient(90deg, var(--real), var(--maybe), var(--ai));
-  height: 100%;
-  width: 0;
-  transition: width 0.4s ease;
-}
-#prob-value { font-variant-numeric: tabular-nums; min-width: 4.5ch; text-align: right; }
 
 .facts {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 0.6rem;
-  margin: 0;
+  margin: 0 0 1rem;
 }
 .facts dt { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; }
 .facts dd { margin: 0; font-size: 0.95rem; word-break: break-word; }
+
+/* Signal tags read better as chips than as one comma-joined string. */
+#signals { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.chip {
+  background: #0c111b;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--text);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  padding: 0.15rem 0.5rem;
+}
+
+.narrative { border-top: 1px solid var(--line); padding-top: 0.85rem; }
+.narrative h3 {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin: 0 0 0.3rem;
+  text-transform: uppercase;
+}
+.narrative p { margin: 0 0 0.85rem; font-size: 0.92rem; }
+.narrative p:last-child { margin-bottom: 0; }
 
 .error {
   background: rgba(255, 92, 122, 0.12);

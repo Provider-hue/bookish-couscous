@@ -40,20 +40,43 @@
     <p id="error" class="error hidden"></p>
 
     <section id="result" class="panel hidden">
-      <div class="verdict-row">
-        <span id="verdict" class="verdict">&mdash;</span>
-        <span id="latency" class="muted"></span>
+      <div class="scan-layout">
+        <!-- Left: the linear meter element (public/meterelemt.html in embed mode) -->
+        <div class="scan-meter">
+          <iframe id="meter" src="./meterelemt.html?embed=1" title="Detection level meter"
+                  width="300" height="300" scrolling="no"></iframe>
+        </div>
+
+        <!-- Right: verdict and every detail the scan produced -->
+        <div class="scan-details">
+          <div class="verdict-row">
+            <span id="verdict" class="verdict">&mdash;</span>
+            <span id="latency" class="muted"></span>
+          </div>
+
+          <dl class="facts">
+            <div><dt>confidence</dt><dd id="confidence">&mdash;</dd></div>
+            <div><dt>classifier</dt><dd id="classifier">&mdash;</dd></div>
+            <div><dt>calibrated</dt><dd id="calibrated">&mdash;</dd></div>
+            <div><dt>warnings</dt><dd id="warnings">&mdash;</dd></div>
+            <div><dt>signals detected</dt><dd id="signals">&mdash;</dd></div>
+            <div><dt>c2pa</dt><dd id="c2pa">&mdash;</dd></div>
+            <div><dt>software signature</dt><dd id="software">&mdash;</dd></div>
+          </dl>
+
+          <div class="narrative">
+            <div class="narrative-block">
+              <h3>explanation</h3>
+              <p id="explanation">&mdash;</p>
+            </div>
+            <div class="narrative-block">
+              <h3>intent</h3>
+              <p id="intent">&mdash;</p>
+            </div>
+            <p id="narration-note" class="hint hidden"></p>
+          </div>
+        </div>
       </div>
-      <div class="prob">
-        <div class="prob-track"><div id="prob-fill"></div></div>
-        <span id="prob-value"></span>
-      </div>
-      <dl class="facts">
-        <div><dt>confidence</dt><dd id="confidence">&mdash;</dd></div>
-        <div><dt>classifier</dt><dd id="classifier">&mdash;</dd></div>
-        <div><dt>calibrated</dt><dd id="calibrated">&mdash;</dd></div>
-        <div><dt>warnings</dt><dd id="warnings">&mdash;</dd></div>
-      </dl>
     </section>
   </main>
 
